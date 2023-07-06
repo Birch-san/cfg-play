@@ -1,13 +1,15 @@
 from src.cfg_logits import CFGLogits
+from src.callback_text_iterator_streamer import CallbackTextIteratorStreamer
 
-# from https://github.com/huggingface/transformers/issues/24536#issuecomment-1622725548
-# by Grant Celley
+# forked from Grant Celley's https://github.com/huggingface/transformers/issues/24536#issuecomment-1622725548
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from transformers import LogitsProcessorList, TemperatureLogitsWarper, TopPLogitsWarper
+import torch
 
 tokenizer = AutoTokenizer.from_pretrained("EleutherAI/pythia-160m")
 
-model = AutoModelForCausalLM.from_pretrained("EleutherAI/pythia-160m")
+device = torch.device('cuda:0')
+model = AutoModelForCausalLM.from_pretrained("EleutherAI/pythia-160m").eval().to(device)
 
 prompt = tokenizer("Today a dragon flew over Paris, France,", return_tensors='pt')
 # either provide a negative prompt:
@@ -15,8 +17,10 @@ neg_prompt = tokenizer("Here begins my tale of woe,", return_tensors='pt')['inpu
 # or don't:
 # neg_prompt = prompt['input_ids'][:, -1:]
 
-device='cuda:0'
-model.to(device)
+def on_text(message: str, stream_end = False):
+    print(message, end='', flush=True)
+
+streamer = CallbackTextIteratorStreamer(tokenizer, callback=on_text, skip_prompt=True, skip_special_tokens=True)
 outputs = model.generate(
     input_ids=prompt['input_ids'].to(device),
     attention_mask=prompt['attention_mask'].to(device),
@@ -29,6 +33,10 @@ outputs = model.generate(
         TopPLogitsWarper(0.95),
     ]),
     do_sample=True,
+    streamer=streamer,
 )
+# print a line break once we've finished streaming
+print('')
 
-print(tokenizer.decode(outputs[0]))
+# no need to print response; we already streamed it out
+# print(tokenizer.decode(outputs[0]))

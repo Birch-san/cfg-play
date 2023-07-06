@@ -12,6 +12,13 @@
       "justMyCode": false,
     },
     {
+      "name": "Python: Multi-cond play",
+      "type": "python",
+      "request": "launch",
+      "module": "scripts.multi_cond_play",
+      "justMyCode": false,
+    },
+    {
       "name": "Python: CFG chat play",
       "type": "python",
       "request": "launch",

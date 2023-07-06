@@ -11,7 +11,7 @@ model = AutoModelForCausalLM.from_pretrained("EleutherAI/pythia-160m")
 
 prompt = tokenizer("Today a dragon flew over Paris, France,", return_tensors='pt')
 # either provide a negative prompt:
-neg_prompt = tokenizer("A sad event happened,", return_tensors='pt')['input_ids']
+neg_prompt = tokenizer("Here begins my tale of woe,", return_tensors='pt')['input_ids']
 # or don't:
 # neg_prompt = prompt['input_ids'][:, -1:]
 

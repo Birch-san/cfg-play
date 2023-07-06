@@ -10,6 +10,17 @@
       "request": "launch",
       "module": "scripts.cfg_play",
       "justMyCode": false,
+    },
+    {
+      "name": "Python: CFG chat play",
+      "type": "python",
+      "request": "launch",
+      "module": "scripts.cfg_chat_play",
+      "justMyCode": false,
+      "args": [
+        "--bf16",
+        "--trust_remote_code",
+      ]
     }
   ]
 }

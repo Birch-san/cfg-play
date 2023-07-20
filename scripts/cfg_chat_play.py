@@ -16,7 +16,7 @@ from transformers import (
   LogitsProcessorList,
   PreTrainedTokenizerBase,
 )
-from src.cfg_logits import CFGLogits
+from src.cfg_logits import UnbatchedClassifierFreeGuidanceLogitsProcessor
 from src.callback_text_iterator_streamer import CallbackTextIteratorStreamer
 from src.mps_type_monkeypatch import monkeypatch_tensor_type_mps
 import logging
@@ -297,6 +297,8 @@ def main():
 
     try:
       uncond_input_ids, cond_input_ids = tokenized_prompts.input_ids
+      cfg_proc = UnbatchedClassifierFreeGuidanceLogitsProcessor(1.5, tensor(uncond_input_ids, device=model.device).unsqueeze(0), model)
+
       _, cond_mask = tokenized_prompts.attention_mask
       prediction: LongTensor = model.generate(
         input_ids=tensor(cond_input_ids, device=model.device).unsqueeze(0),
@@ -306,7 +308,7 @@ def main():
         stopping_criteria=stopping_criteria,
         streamer=streamer,
         logits_processor=LogitsProcessorList([
-          CFGLogits(1.5, tensor(uncond_input_ids, device=model.device).unsqueeze(0), model),
+          cfg_proc,
           *([TemperatureLogitsWarper(generation_config.temperature)] if generation_config.temperature > 0. else []),
           *([TopPLogitsWarper(generation_config.top_p)] if generation_config.top_p is not None and generation_config.top_p < 1. else []),
         ]),
